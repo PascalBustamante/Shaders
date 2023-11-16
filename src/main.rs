@@ -14,7 +14,7 @@ use crate::image::GenericImageView;
 
 fn main() {
     // Load the image
-    let img = image::open("C:\\Users\\pasca\\My Game\\bevy_playground\\assets\\Provinces_2600_100_3600_1000.png").unwrap();
+    let img = image::open("C:\\Users\\pasca\\My Game\\shaders\\assets\\Provinces_2600_100_3600_1000.png").unwrap();
     //let width = img.width();
     //let height = img.height(); //these 3 might not be needed 
     //let raw_pixels = img.into_bytes();
@@ -38,7 +38,7 @@ fn main() {
     let texture_id = load_texture(&img).unwrap();
     
     // Read the shader code from a file
-    let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\bevy_playground\\assets\\shaders\\simple_sobel_shader.glsl").expect("Failed to read shader file");
+    let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shaders\\simple_sobel_shader.glsl").expect("Failed to read shader file");
 
     // Compile the shader
     let fragment_shader = compile_shader(&shader_source, gl::FRAGMENT_SHADER);
