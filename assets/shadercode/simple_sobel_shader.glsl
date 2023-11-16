@@ -7,7 +7,7 @@ layout(location = 0) in vec2 TexCoord;
 out vec4 FragColor;
 
 // Input texture
-uniform sampler2D texture;
+uniform sampler2D inputTexture;
 
 // Function to perform convolution with a given kernel
 vec3 convolution(sampler2D texture, vec2 texCoord, mat3 kernel) {
@@ -15,7 +15,7 @@ vec3 convolution(sampler2D texture, vec2 texCoord, mat3 kernel) {
     for (int i = -1; i <= 1; ++i) {
         for (int j = -1; j <= 1; ++j) {
             // Sample neighboring pixel and apply the convolution kernel
-            sum += texture(texture, texCoord + vec2(i, j)).rgb * kernel[i + 1][j + 1];
+            sum += texture2D(inputTexture, texCoord + vec2(i, j)).rgb * kernel[i + 1][j + 1];
         }
     }
     return sum;

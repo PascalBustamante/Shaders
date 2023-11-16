@@ -38,7 +38,9 @@ fn main() {
     let texture_id = load_texture(&img).unwrap();
     
     // Read the shader code from a file
-    let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shaders\\simple_sobel_shader.glsl").expect("Failed to read shader file");
+    let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\simple_sobel_shader.glsl").expect("Failed to read shader file");
+    let vertex_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\vertex_test.glsl").expect("Failed to read shader file");
+    let fragment_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\fragment_test.glsl").expect("Failed to read shader file");
 
     // Compile the shader
     let fragment_shader = compile_shader(&shader_source, gl::FRAGMENT_SHADER);
@@ -121,7 +123,7 @@ fn load_texture(image: &image::DynamicImage) -> Result<GLuint, Box<dyn std::erro
             rgba_data.as_ptr() as *const c_void,
         );
     }
-
+    println!("{}", texture_id);
     Ok(texture_id)
 }
 
@@ -136,15 +138,20 @@ fn compile_shader(source: &str, shader_type: GLenum) -> GLuint {
         // Check compilation status
         let mut success: GLint = 0;
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
+        //println!("inside compiler.");
         if success == gl::FALSE as GLint {
             let mut len: GLint = 0;
+            println!("ERROR.");
+
             gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
-            let mut buffer: Vec<u8> = Vec::with_capacity(len as usize);
-            buffer.extend([b' '].iter().cycle().take(len as usize - 1));
+            let mut buffer: Vec<u8> = vec![0; len as usize]; // Initialize buffer with zeros
+//            let mut buffer: Vec<u8> = Vec::with_capacity(len as usize);
+//            buffer.extend([b' '].iter().cycle().take(len as usize - 1));
             gl::GetShaderInfoLog(shader, len, ptr::null_mut(), buffer.as_mut_ptr() as *mut GLchar);
             let error_message = String::from_utf8_lossy(&buffer);
             panic!("Shader compilation failed: {}", error_message);
         }
+        //println!("past eror msg.");
 
         shader
     }
@@ -160,6 +167,7 @@ fn link_program(fragment_shader: GLuint) -> GLuint {
         // Check linking status
         let mut success: GLint = 0;
         gl::GetProgramiv(program, gl::LINK_STATUS, &mut success);
+        println!("inside linkage.");
         if success == gl::FALSE as GLint {
             println!("Linkage broke!");
             let mut len: GLint = 0;
@@ -170,6 +178,7 @@ fn link_program(fragment_shader: GLuint) -> GLuint {
             let error_message = String::from_utf8_lossy(&buffer);
             panic!("Shader program linking failed: {}", error_message);
         }
+        //println!("Past error.");
 
         program
     }
@@ -177,29 +186,57 @@ fn link_program(fragment_shader: GLuint) -> GLuint {
 
 // Function to render a quad with the given shader and texture
 fn render_quad(program: GLuint, texture_id: GLuint, vao: GLuint) {
+    //println!("Inside quad.");
+
     unsafe {
         // Use the shader program
         gl::UseProgram(program);
 
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
+
         // Activate a texture unit
         gl::ActiveTexture(gl::TEXTURE0);
 
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
+
         // Bind the texture to the active texture unit
         gl::BindTexture(gl::TEXTURE_2D, texture_id);
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
 
         // Get the location of the 'inputTexture' uniform in the shader
         let texture_uniform_location = gl::GetUniformLocation(program, "inputTexture\0".as_ptr() as *const i8);
 
         // Set the texture unit index as the value for the 'inputTexture' uniform
         gl::Uniform1i(texture_uniform_location, 0);
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
 
         // Render the quad
         gl::BindVertexArray(vao);
         gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
     }
+    //println!("After gl stuuf.");
+
 }
 
 fn initialize_opengl() -> (GLuint, GLuint, GLuint) {
+    //println!("Inside GL initiation.");
+
     // Set up a quad for rendering
     let vertices: [f32; 12] = [
         -1.0, -1.0, 0.0,
@@ -218,17 +255,36 @@ fn initialize_opengl() -> (GLuint, GLuint, GLuint) {
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
         gl::BindVertexArray(vao);
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
 
         gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const _, gl::STATIC_DRAW);
 
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
+
         gl::GenBuffers(1, &mut ebo);
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * std::mem::size_of::<u32>()) as isize, indices.as_ptr() as *const _, gl::STATIC_DRAW);
 
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
+
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as i32, ptr::null());
         gl::EnableVertexAttribArray(0);
+
+        let error = gl::GetError();
+        if error != gl::NO_ERROR {
+            println!("OpenGL error: {}", error);
+        }
 
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
