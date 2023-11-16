@@ -936,21 +936,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_playground"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_mod_picking",
- "gl",
- "gl_generator",
- "glfw",
- "glium",
- "image",
- "nalgebra",
- "wgpu 0.18.0",
-]
-
-[[package]]
 name = "bevy_ptr"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3605,6 +3590,21 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "shaders"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_mod_picking",
+ "gl",
+ "gl_generator",
+ "glfw",
+ "glium",
+ "image",
+ "nalgebra",
+ "wgpu 0.18.0",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@ extern crate glfw;
 extern crate image;
 
 use std::os::raw::c_void;
-use std::ffi::{CString, CStr};
+use std::ffi::{CString};
 use std::ptr;
 use std::fs;
 use gl::types::*;
