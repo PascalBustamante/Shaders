@@ -1,3 +1,5 @@
+#![allow(unused_imports, dead_code)]
+
 extern crate gl;
 extern crate gl_generator;
 extern crate glfw;
@@ -12,9 +14,11 @@ use glfw::{Action, Context, Key};
 use glfw::fail_on_errors;
 use crate::image::GenericImageView;
 
+// mod shader_pipeline;
+
 fn main() {
     // Load the image
-    let img = image::open("C:\\Users\\pasca\\My Game\\shaders\\assets\\Provinces_2600_100_3600_1000.png").unwrap();
+    let img = image::open("C:\\Users\\pasca\\My Game\\shaders\\assets\\sample_texture.jpg").unwrap();
     //let width = img.width();
     //let height = img.height(); //these 3 might not be needed 
     //let raw_pixels = img.into_bytes();
@@ -27,7 +31,7 @@ fn main() {
         glfw::OpenGlProfileHint::Core,
     ));
     let (mut window, events) = glfw
-        .create_window(800, 600, "Hello, I'm a window!", glfw::WindowMode::Windowed)
+        .create_window(800, 600, "Red Triangle", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
     window.make_current();
@@ -38,15 +42,16 @@ fn main() {
     let texture_id = load_texture(&img).unwrap();
     
     // Read the shader code from a file
-    let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\simple_sobel_shader.glsl").expect("Failed to read shader file");
-    let vertex_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\vertex_test.glsl").expect("Failed to read shader file");
-    let fragment_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\fragment_test.glsl").expect("Failed to read shader file");
+    // let shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\simple_sobel_shader.glsl").expect("Failed to read shader file");
+    //let vertex_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\vertex_test.glsl").expect("Failed to read shader file");
+    //let fragment_shader_source = fs::read_to_string("C:\\Users\\pasca\\My Game\\shaders\\assets\\shadercode\\fragment_test.glsl").expect("Failed to read shader file");
 
     // Compile the shader
-    let fragment_shader = compile_shader(&shader_source, gl::FRAGMENT_SHADER);
+    let vertex_shader: u32 = compile_shader(&vertex_shader_source, gl::VERTEX_SHADER);
+    let fragment_shader = compile_shader(&fragment_shader_source, gl::FRAGMENT_SHADER);
 
     // Link the shader program
-    let program = link_program(fragment_shader);
+    let program = link_program(vertex_shader, fragment_shader);
 
     // Initialize OpenGL
     let (vao, vbo, ebo) = initialize_opengl();
@@ -62,7 +67,21 @@ fn main() {
     // Loop until the user closes the window
     while !window.should_close() {
         // Swap front and back buffers
-        window.swap_buffers();
+        //window.swap_buffers();
+
+        unsafe {
+            // Specify the color of the background
+            gl::ClearColor(0.07f32, 0.13f32, 0.17f32, 1.0f32);
+            // Clean the back buffer and assign the new color
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+            // Tell OpenGL which shader program to use 
+            gl::UseProgram(program);
+            // Bind the vao so OpenGL knows to use it
+            gl::BindVertexArray(vao);
+            // Draw the triangles using GL_TRIANGLES primitive
+            gl::DrawElements(gl::TRIANGLES, 9, gl::UNSIGNED_INT, ptr::null());
+            window.swap_buffers();
+        }
 
         // Poll for and process events
         glfw.poll_events();
@@ -88,6 +107,7 @@ fn main() {
         gl::DeleteTextures(1, &texture_id);
         gl::DeleteProgram(program);
     }
+    
 }
 
 
@@ -158,11 +178,16 @@ fn compile_shader(source: &str, shader_type: GLenum) -> GLuint {
 }
 
 // Function to link a shader program
-fn link_program(fragment_shader: GLuint) -> GLuint {
+fn link_program(vertex_shader: GLuint, fragment_shader: GLuint) -> GLuint {
     unsafe {
         let program = gl::CreateProgram();
+        gl::AttachShader(program, vertex_shader);
         gl::AttachShader(program, fragment_shader);
         gl::LinkProgram(program);
+
+        // Done using the shaders
+        gl::DeleteShader(vertex_shader);
+        gl::DeleteShader(fragment_shader);
 
         // Check linking status
         let mut success: GLint = 0;
@@ -230,64 +255,59 @@ fn render_quad(program: GLuint, texture_id: GLuint, vao: GLuint) {
             println!("OpenGL error: {}", error);
         }
     }
-    //println!("After gl stuuf.");
+    println!("After gl stuuf.");
 
 }
 
 fn initialize_opengl() -> (GLuint, GLuint, GLuint) {
     //println!("Inside GL initiation.");
 
-    // Set up a quad for rendering
-    let vertices: [f32; 12] = [
-        -1.0, -1.0, 0.0,
-         1.0, -1.0, 0.0,
-         1.0,  1.0, 0.0,
-        -1.0,  1.0, 0.0,
+    let vertices: [f32; 18] = [
+        -0.5f32, (-0.5f32 * 3.0f32.sqrt()) / 3f32, 0.0f32, // Lower left corner
+        0.5f32, (-0.5f32 * 3.0f32.sqrt()) / 3f32, 0.0f32, // Lower right corner
+        0.0f32 / 2f32, (0.5f32 * 3.0f32.sqrt()) * 2f32 / 3f32, 0.0f32, // Upper corner
+        -0.5f32 / 2f32, (0.5f32 * 3.0f32.sqrt()) / 6f32, 0.0f32, // Inner left
+        0.5f32 / 2f32, (0.5f32 * 3.0f32.sqrt()) / 6f32, 0.0f32, // Inner right
+        0.0f32, (0.5f32 * 3.0f32.sqrt()), 0.0f32, // Inner down
     ];
 
-    // A rectangle as 2 triangles
-    let indices: [u32; 6] = [0, 1, 2, 0, 2, 3]; 
+    // Vertex sharing
+    let indices: [u32; 9] = [
+        0, 3, 5, // Lower left triangle
+        3, 2, 4, // Lower right triangle 
+        5, 4, 1, // Upper triangle
+    ]; 
 
     let mut vao = 0;
     let mut vbo = 0;
     let mut ebo = 0;
 
     unsafe {
+        // Generate vao and vbo with 1 object each
         gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-        let error = gl::GetError();
-        if error != gl::NO_ERROR {
-            println!("OpenGL error: {}", error);
-        }
-
         gl::GenBuffers(1, &mut vbo);
+        gl::GenBuffers(1, &mut ebo);
+
+        // Make the vao the current vertex array object by binding it 
+        gl::BindVertexArray(vao);
+
+        // Bind the vbo
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+
+        // Introduce vertices to vbo
         gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const _, gl::STATIC_DRAW);
 
-        let error = gl::GetError();
-        if error != gl::NO_ERROR {
-            println!("OpenGL error: {}", error);
-        }
-
-        gl::GenBuffers(1, &mut ebo);
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * std::mem::size_of::<u32>()) as isize, indices.as_ptr() as *const _, gl::STATIC_DRAW);
 
-        let error = gl::GetError();
-        if error != gl::NO_ERROR {
-            println!("OpenGL error: {}", error);
-        }
-
+        // Configure the vertex attribute so that OpenGL knows how to read the vbo
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as i32, ptr::null());
+        // Enable the vertex attribute so that OpenGL knows how to use it
         gl::EnableVertexAttribArray(0);
-
-        let error = gl::GetError();
-        if error != gl::NO_ERROR {
-            println!("OpenGL error: {}", error);
-        }
 
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
     }
 
     (vao, vbo, ebo)
