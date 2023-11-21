@@ -23,20 +23,18 @@ use shader_pipeline::Shader::Shader;
 
 fn main() {
     // Vertices coordinates
-    let mut vertices: [GLfloat; 18] = [
-        -0.5, -0.5 * f32::sqrt(3.0) / 3.0, 0.0, // Lower left corner
-        0.5, -0.5 * f32::sqrt(3.0) / 3.0, 0.0, // Lower right corner
-        0.0, 0.5 * f32::sqrt(3.0) * 2.0 / 3.0, 0.0, // Upper corner
-        -0.5 / 2.0, 0.5 * f32::sqrt(3.0) / 6.0, 0.0, // Inner left
-        0.5 / 2.0, 0.5 * f32::sqrt(3.0) / 6.0, 0.0, // Inner right
-        0.0, -0.5 * f32::sqrt(3.0) / 3.0, 0.0 // Inner down
-    ];
+        let vertices: [GLfloat; 24] = [
+//             COORDINATES    /     COLORS           //
+            -0.5, -0.5, 0.0,     1.0, 0.0,  0.0, // Lower left corner
+            -0.5, 0.5, 0.0,     0.0, 1.0,  0.0, // Lower right corner
+            0.5,  0.5, 0.0,     0.0, 0.0,  1.0, // Upper corner
+            0.5, -0.5, 0.0,     1.0, 1.0, 1.0, // Inner left
+        ];
 
     // Indices for vertices order
-    let mut indices: [GLuint; 9] = [
-        0, 3, 5, // Lower left triangle
-        3, 2, 4, // Lower right triangle
-        5, 4, 1 // Upper triangle
+    let indices: [GLuint; 6] = [
+        0, 2, 1, // Upper triangle
+	    0, 3, 2 // Lower triangle
     ];
 
     // Initialize GLFW
@@ -71,25 +69,32 @@ fn main() {
             // Shader creation successful
 
             // Generate Vertex Array Object and bind it
-            let mut vao = VAO::new();
+            let vao = VAO::new();
             vao.bind();
 
             // Generate Vertex Buffer Object and link it to verticies
-            let mut vbo = VBO::new(&vertices);
+            let vbo = VBO::new(&vertices);
 
             // Generate Element Buffer Object and link it to indices
-            let mut ebo = EBO::new(&indices);
+            let ebo = EBO::new(&indices);
 
-            // Link VBO to VAO
-            vao.link_vbo(&vbo, 0);
+            // Links VBO attributes such as coordinates and colors to VAO
+            vao.link_attrib(&vbo, 0, 3, gl::FLOAT, 6  * std::mem::size_of::<f32>() as GLsizei, std::ptr::null());
+            vao.link_attrib(&vbo, 1, 3, gl::FLOAT, 6 * std::mem::size_of::<f32>() as GLsizei, (3 * std::mem::size_of::<f32>()) as *const std::ffi::c_void);
+
 
             // Unbind all to prevent accidental modifications
             vao.unbind();
             vbo.unbind();
             ebo.unbind();
 
-            // Loop until the user closes the window
             
+            // Get id of Uniform called "scale"                
+            let uni_id: i32 = unsafe {
+                gl::GetUniformLocation(shader_program.id,  CString::new("scale").unwrap().as_ptr())
+            };
+
+            // Loop until the user closes the window
             while !window.should_close() {
                 unsafe {
                     // Specify the color of the background
@@ -98,10 +103,12 @@ fn main() {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                     // Tell OpenGL which shader program to use 
                     shader_program.activate();
+                    // Assigns a value to the uniform; NOTE: Must always be done after activating the Shader Program
+                    gl::Uniform1f(uni_id, 0.5);
                     // Bind the vao so OpenGL knows to use it
                     vao.bind();
                     // Draw the triangles using GL_TRIANGLES primitive
-                    gl::DrawElements(gl::TRIANGLES, 9, gl::UNSIGNED_INT, ptr::null());
+                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
                     // Swap front and back buffers
                     window.swap_buffers();
                 }

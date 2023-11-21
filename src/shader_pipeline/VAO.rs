@@ -1,5 +1,6 @@
 use gl::types::*;
 use crate::VBO;
+use std::ffi::c_void;
 
 pub struct VAO {
     // id reference for the Vertex Array Object
@@ -38,10 +39,10 @@ impl VAO {
     }
 
     // Links a VBO to the VAO using a certain layout
-    pub fn link_vbo(&self, vbo: &VBO, layout: GLuint) {
+    pub fn link_attrib(&self, vbo: &VBO, layout: GLuint, num_components: GLuint, vbo_type: GLenum, stride: GLsizei, offset: *const std::ffi::c_void) {
         vbo.bind();
         unsafe{
-            gl::VertexAttribPointer(layout, 3, gl::FLOAT, gl::FALSE, 0, std::ptr::null());  // this might cause errors 
+            gl::VertexAttribPointer(layout, num_components as i32, vbo_type, gl::FALSE, stride, offset); 
             gl::EnableVertexAttribArray(layout);
         }
         vbo.unbind();
