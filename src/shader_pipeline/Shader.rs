@@ -1,3 +1,9 @@
+use gl::types::*;
+use std::ffi::{CString};
+use std::ptr;
+use std::fs;
+use std::io;
+
 // Read file contents into a String
 fn read_file_contents(filename: &str) -> Result<String, io::Error> {
     fs::read_to_string(filename)
@@ -16,7 +22,7 @@ fn check_shader_compile_errors(shader: GLuint, shader_type: &str) {
         
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
 
-        if success != gl::TRUE as GLuint {
+        if success != gl::TRUE as i32 {
             gl::GetShaderInfoLog(
                 shader,
                 512,
@@ -57,8 +63,8 @@ fn check_program_link_errors(program: GLuint) {
 }
 
 pub struct Shader {
-    // Reference ID of the Shader Program
-    pub ID: GLuint,
+    // Reference id of the Shader Program
+    pub id: GLuint,
 }
 
 impl Shader {
@@ -115,20 +121,20 @@ impl Shader {
             gl::DeleteShader(fragment_shader);
         }
 
-        Ok(Self { ID: program_id })
+        Ok(Self { id: program_id })
     }
 
     // Activates Shader Program
     pub fn activate(&self) {
         unsafe {
-            gl::UseProgram(self.ID);
+            gl::UseProgram(self.id);
         }
     }
 
     // Deletes Shader Program 
     pub fn delete(&self) {
         unsafe {
-            gl::DeleteProgram(self.ID);
+            gl::DeleteProgram(self.id);
         }
     }
 }

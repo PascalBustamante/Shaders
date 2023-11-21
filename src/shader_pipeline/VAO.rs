@@ -1,14 +1,17 @@
+use gl::types::*;
+use crate::VBO;
+
 pub struct VAO {
-    // ID reference for the Vertex Array Object
-    pub ID: GLuint,
+    // id reference for the Vertex Array Object
+    pub id: GLuint,
 }
 
 impl VAO {
     // Constructor
     pub fn new() -> Self {
-        let mut vao = VAO { ID: 0 };
+        let mut vao = VAO { id: 0 };
         unsafe {
-            gl::GenVertexArrays(1, &mut vao.ID);
+            gl::GenVertexArrays(1, &mut vao.id);
         }
         vao
     }
@@ -16,7 +19,7 @@ impl VAO {
     // Bind the VAO
     pub fn bind(&self) {
         unsafe{
-            gl::BindVertexArray(self.ID);
+            gl::BindVertexArray(self.id);
         }
     }
 
@@ -30,7 +33,7 @@ impl VAO {
     // Deletes the VAO
     pub fn delete(&self) {
         unsafe {
-            gl::DeleteVertexArrays(1, &self.ID);
+            gl::DeleteVertexArrays(1, &self.id);
         }
     }
 

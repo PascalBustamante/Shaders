@@ -1,18 +1,21 @@
+use gl::types::*;
+use std::ffi::c_void;
+
 pub struct EBO {
-    // Reference ID of Elements Buffer Object
-    pub ID: GLuint,
+    // Reference id of Elements Buffer Object
+    pub id: GLuint,
 }
 
 impl EBO {
     // Constructor that generates a Elements Buffer Object and links it to indices
-    pub fn new(indicies: &[GLuint]) {
-        let mut ebo = EBO { ID: 0 };
+    pub fn new(indicies: &[GLuint]) -> Self {
+        let mut ebo = EBO { id: 0 };
         unsafe {
-            gl::GenBuffers(1, &mut ebo.ID);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo.ID);
+            gl::GenBuffers(1, &mut ebo.id);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo.id);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, 
-                (indices.len() * std::mem::size_of::<GLuint>()) as gl::isize,
-                indices.as_ptr() as *const std::ffi::c_void, 
+                (indicies.len() * std::mem::size_of::<GLuint>()) as isize,
+                indicies.as_ptr() as *const std::ffi::c_void, 
                 gl::STATIC_DRAW);
         }
         ebo
@@ -21,7 +24,7 @@ impl EBO {
     // Bind the EBO
     pub fn bind(&self) {
         unsafe {
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ID);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
         }
     }
 
@@ -35,7 +38,7 @@ impl EBO {
     // Deletes the EBO
     pub fn delete(&self) {
         unsafe {
-            gl::DeleteBuffers(1, &self.ID);
+            gl::DeleteBuffers(1, &self.id);
         }
     }
 }
