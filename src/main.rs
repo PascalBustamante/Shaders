@@ -23,12 +23,12 @@ use shader_pipeline::Shader::Shader;
 
 fn main() {
     // Vertices coordinates
-        let vertices: [GLfloat; 24] = [
-//             COORDINATES    /     COLORS           //
-            -0.5, -0.5, 0.0,     1.0, 0.0,  0.0, // Lower left corner
-            -0.5, 0.5, 0.0,     0.0, 1.0,  0.0, // Lower right corner
-            0.5,  0.5, 0.0,     0.0, 0.0,  1.0, // Upper corner
-            0.5, -0.5, 0.0,     1.0, 1.0, 1.0, // Inner left
+        let vertices: [GLfloat; 32] = [
+//             COORDINATES    /     COLORS        /   TexCoord   //
+            -0.5, -0.5, 0.0,     1.0, 0.0, 0.0,     0.0, 0.0,  // Lower left corner
+            -0.5, 0.5, 0.0,     0.0, 1.0, 0.0,     0.0, 1.0,  // Lower right corner
+            0.5, 0.5, 0.0,     0.0, 0.0, 1.0,     1.0, 1.0,  // Upper corner
+            0.5, -0.5, 0.0,     1.0, 1.0, 1.0,     1.0, 0.0  // Inner left
         ];
 
     // Indices for vertices order

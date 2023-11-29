@@ -16,3 +16,4 @@ pub mod VAO;
 pub mod VBO;
 pub mod EBO;
 pub mod Shader;
+pub mod texture;
